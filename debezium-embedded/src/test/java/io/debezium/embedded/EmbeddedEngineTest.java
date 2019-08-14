@@ -149,6 +149,34 @@ public class EmbeddedEngineTest extends AbstractConnectorTest {
         stopConnector();
     }
 
+    @Test
+    public void shouldStopEngine() throws Exception {
+        // Add initial content to the file ...
+        appendLinesToSource(NUMBER_OF_LINES);
+
+        Configuration config = Configuration.copy(connectorConfig)
+                .with(EmbeddedEngine.ENGINE_NAME, "testing-connector")
+                .with(EmbeddedEngine.CONNECTOR_CLASS, FileStreamSourceConnector.class)
+                .with(StandaloneConfig.OFFSET_STORAGE_FILE_FILENAME_CONFIG, OFFSET_STORE_PATH)
+                .with(EmbeddedEngine.OFFSET_FLUSH_INTERVAL_MS, 0)
+                .build();
+
+        // create an engine with our custom class
+        engine = EmbeddedEngine.create()
+                .using(config)
+                .notifying((records, committer) -> {
+                    throw new InterruptedException("Handler failed");
+                })
+                .using(this.getClass().getClassLoader())
+                .build();
+
+        ExecutorService exec = Executors.newSingleThreadExecutor();
+        exec.execute(engine);
+
+        // Engine should not be running anymore after it caught the exception
+        assertThat(exec.awaitTermination(5, TimeUnit.SECONDS)).isTrue();
+    }
+
     protected void appendLinesToSource(int numberOfLines) throws IOException {
         CharSequence[] lines = new CharSequence[numberOfLines];
         for (int i = 0; i != numberOfLines; ++i) {
