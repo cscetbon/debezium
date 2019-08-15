@@ -178,7 +178,7 @@ public class EmbeddedEngineTest extends AbstractConnectorTest {
         }));
 
         // Engine should not be running anymore after it caught the exception
-        assertThat(exec.awaitTermination(5, TimeUnit.SECONDS)).isTrue();
+        assertThat(engine.await(5, TimeUnit.SECONDS)).isTrue();
     }
 
     protected void appendLinesToSource(int numberOfLines) throws IOException {
