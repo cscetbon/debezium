@@ -173,6 +173,10 @@ public class EmbeddedEngineTest extends AbstractConnectorTest {
         ExecutorService exec = Executors.newSingleThreadExecutor();
         exec.execute(engine);
 
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            engine.stop();
+        }));
+
         // Engine should not be running anymore after it caught the exception
         assertThat(exec.awaitTermination(5, TimeUnit.SECONDS)).isTrue();
     }
